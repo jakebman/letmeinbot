@@ -1,7 +1,16 @@
 import json
 from botocore.vendored import requests
 from os import environ
-
+from pprint import pprint
+HEADERS = dict()
+debug_settings = {'method':print}
+def debug_to_me(msg):
+    send(
+        "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83NDk5YTMzOC02YzM4LTQzMDctYjVkMi1jYjVjYTg2OGM2ODY", #TODO: consider a letmein bot debug room
+        msg
+        )
+    print(msg)
+    
 def debug(**msgs) :
     index = 0
     for key in msgs:
@@ -10,9 +19,7 @@ def debug(**msgs) :
 {0}:
 {1}         """.format(key, json.dumps(msgs[key], indent=3))
 
-        send(
-            "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83NDk5YTMzOC02YzM4LTQzMDctYjVkMi1jYjVjYTg2OGM2ODY", #TODO: consider a letmein bot debug room
-            debug_msg)
+        debug_settings['method'](debug_msg)
         
 
 def send(personId, markdown):
@@ -20,10 +27,12 @@ def send(personId, markdown):
             "toPersonId": personId,
             "markdown": markdown,
         }
-    requests.post('https://api.ciscospark.com/v1/messages', headers={"Authorization": TOKEN}, json=payload)
+    requests.post('https://api.ciscospark.com/v1/messages',  headers=HEADERS, json=payload)
 
 def roomList():
-    return requests.get('https://api.ciscospark.com/v1/rooms?type=group', headers={"Authorization": TOKEN}).json()['items']
+     req = requests.get('https://api.ciscospark.com/v1/rooms?type=group', headers=HEADERS)
+     js = req.json()
+     return js['items']
 
 def list_rooms(personId):
     rooms = roomList()
@@ -37,8 +46,7 @@ def list_rooms(personId):
     
 def create_membership(personId, roomId):
     payload = {'personId':personId, 'roomId': roomId}
-    TOKEN = "Bearer {}".format()
-    r = requests.post('https://api.ciscospark.com/v1/memberships', headers={"Authorization": TOKEN}, json=payload)
+    r = requests.post('https://api.ciscospark.com/v1/memberships',  headers=HEADERS, json=payload)
     debug(creation=r.json(), headers=dict(r.headers))
     
 
@@ -51,15 +59,23 @@ def join_room(personId, roomTitle):
     
 
 def lambda_handler(event, context):
+    if 'data' not in event:
+        pprint(event)
+    if 'id' not in event['data']:
+        pprint(event['data'])
     message_id = event['data']['id']
-    message = requests.get('https://api.ciscospark.com/v1/messages/{}'.format(message_id), headers={"Authorization": environ['Authorization']})
+    
+    HEADERS['Authorization'] = environ['Authorization']
+    print (HEADERS)
+    message = requests.get('https://api.ciscospark.com/v1/messages/{}'.format(message_id), headers=HEADERS)
     
     body = message.json()#['id']
     
     text = body['text']
-    
     if "debug" in text or 'debug' in event: # string contains, or key exists
-        debug(event=event, message_itself=body)
+        debug_settings['method'] = debug_to_me
+
+    debug(event=event, message_itself=body)
     
     if 'list' in text:
         list_rooms(body['personId'])
