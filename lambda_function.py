@@ -29,6 +29,16 @@ def debug(*msgs, **kmsg):
         debug_settings['method'](msg)
 
 
+def respond(context_msg, markdown):
+    room = None
+
+    personId = context_msg['personId']
+    if context_msg['roomType'] != 'direct':
+        room = context_msg['roomId']
+
+    send(personId, markdown, room)
+
+
 def send(personId, markdown, room=None):
     payload = dict()
     if (room):
@@ -82,6 +92,20 @@ def join_room(personId, roomTitle):
         create_membership(personId, id)
 
 
+def show_help(context_msg):
+    respond(context_msg, """```
+HI, I'M LETMEINBOT, I'm new here!
+Webex Teams doesn't let you re-enter rooms you leave.
+I do.
+If you invite me to a room, I will let you into that room if you leave.
+```""")
+    respond(context_msg, """`I respond to the following commands:`
+* list - I will tell you which rooms I can let you in to
+* join <name> - I will you into any rooms with that name
+* help - I print this message again
+I trust everyone, so don't let me into any sensitive rooms!""")
+
+
 def lambda_handler(event, context):
     debug_settings['method'] = print
     if 'data' not in event:
@@ -110,14 +134,14 @@ def lambda_handler(event, context):
 
     debug(event=event, message_itself=body)
 
-    if 'list' in text:
-        list_rooms(body['personId'])
-
-    if 'join ' in text:
+    if 'help' in text:
+        show_help(message)
+    elif 'join ' in text:
         needle = 'join '
         pos = text.find(needle)
-
         join_room(body['personId'], text[pos + len(needle):])
+    elif 'list' in text:
+        list_rooms(body['personId'])
 
     return {
         'statusCode': 200,
