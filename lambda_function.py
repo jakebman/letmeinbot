@@ -93,13 +93,12 @@ def join_room(personId, roomTitle):
 
 
 def show_help(context_msg):
-    respond(context_msg, """```
-HI, I'M LETMEINBOT, I'm new here!
-Webex Teams doesn't let you re-enter rooms you leave.
-I do.
-If you invite me to a room, I will let you into that room if you leave.
-```""")
-    respond(context_msg, """`I respond to the following commands:`
+    respond(context_msg, """
+HI, I'M `LetMeInBot(beta)`, I'm new here!  
+Webex Teams doesn't let you re-enter rooms you leave.  
+I do.  
+If you invite me to a room, I will let you into that room if you leave.  
+I respond to the following commands:
 * list - I will tell you which rooms I can let you in to
 * join <name> - I will you into any rooms with that name
 * help - I print this message again
@@ -135,7 +134,7 @@ def lambda_handler(event, context):
     debug(event=event, message_itself=body)
 
     if 'help' in text:
-        show_help(message)
+        show_help(body)
     elif 'join ' in text:
         needle = 'join '
         pos = text.find(needle)
