@@ -39,7 +39,8 @@ def send(personId, markdown, room=None):
         payload["toPersonId"] = personId
 
     payload["markdown"] = markdown
-    print("sending create request with " + str(payload.keys()))
+    print("sending create request!")
+    pprint(payload)
     resp = requests.post('https://api.ciscospark.com/v1/messages', headers=HEADERS, json=payload)
     if not resp or not resp.ok:
         print(resp)
