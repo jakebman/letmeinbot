@@ -104,7 +104,8 @@ I respond to the following commands:
 * join \\<name\\> - I will you into any rooms with that name
 * help - I print this message again
 
-I trust everyone, so don't let me into any sensitive rooms!""")
+I don't have a good trust model yet, so I let absolutely anyone into your room!  
+Please don't add me to sensitive rooms :(""")
 
 
 def lambda_handler(event, context):
