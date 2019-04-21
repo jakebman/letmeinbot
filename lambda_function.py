@@ -101,7 +101,7 @@ I do.
 If you invite me to a room, I will let you (or anyone!) into that room if they ask!  
 I respond to the following commands:
 * list - I will tell you which rooms I can let you in to
-* join \\<name\\> - I will you into any rooms with that name
+* join Room Name - I will you into any rooms with with 'Room Name' in their names
 * help - I print this message again
 
 I don't have a good trust model yet, so I let absolutely anyone into your room!  
@@ -136,13 +136,13 @@ def lambda_handler(event, context):
 
     debug(event=event, message_itself=body)
 
-    if 'help' in text:
+    if 'help' in text.lower():
         show_help(body)
-    elif 'join ' in text:
+    elif 'join ' in text.lower():
         needle = 'join '
-        pos = text.find(needle)
+        pos = text.lower().find(needle)
         join_room(body['personId'], text[pos + len(needle):])
-    elif 'list' in text:
+    elif 'list' in text.lower():
         list_rooms(body['personId'])
 
     return {
