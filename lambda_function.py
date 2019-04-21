@@ -61,9 +61,9 @@ def list_rooms(personId):
     prompt = json.dumps(names)
 
     bullet_list = "\n".join("* " + n for n in names)
-    markdown = "Here are the rooms that <@personId:{}> can let you in to:\n" \
-               "{}\n" \
-               "Use 'join <room name>' to enter a room.".format(BOT_ID, bullet_list)
+    markdown = "Here are the rooms that LetMeInBot can let you in to:\n" \
+               "{}\n\n" \
+               "Use 'join \<room name\>' to join a room.".format(bullet_list)
 
     send(personId, markdown)
 
