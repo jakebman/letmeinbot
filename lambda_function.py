@@ -3,7 +3,8 @@ from botocore.vendored import requests
 from os import environ
 from pprint import pprint
 
-BOT_ID = "Y2lzY29zcGFyazovL3VzL0FQUExJQ0FUSU9OL2NkZWFjMzY2LWU2MzQtNDVmNS05NmRiLWJiMGJiNTMxZTE0Yg"
+#BOT_ID = "Y2lzY29zcGFyazovL3VzL0FQUExJQ0FUSU9OL2NkZWFjMzY2LWU2MzQtNDVmNS05NmRiLWJiMGJiNTMxZTE0Yg"
+MYSELF = 'Y2lzY29zcGFyazovL3VzL1BFT1BMRS9jZGVhYzM2Ni1lNjM0LTQ1ZjUtOTZkYi1iYjBiYjUzMWUxNGI'
 HEADERS = dict()
 debug_settings = {'method': print}
 
@@ -29,22 +30,22 @@ def debug(*msgs, **kmsg):
         debug_settings['method'](msg)
 
 
-def respond(context_msg, markdown):
+def respond(context_msg, markdown, personal=False):
     room = None
 
     personId = context_msg['personId']
     if context_msg['roomType'] != 'direct':
         room = context_msg['roomId']
 
-    send(personId, markdown, room)
+    send(personId, markdown, room, personal)
 
 
-def send(personId, markdown, room=None):
+def send(personId, markdown, room=None, personal=False):
     payload = dict()
-    if (room):
+    if room:
         payload["roomId"] = room
-        if (personId):
-            markdown = "<@personId{}>: {}".format(personId, markdown)
+        if personal and personId:
+            markdown = "<@personId:{}>: {}".format(personId, markdown)
     else:
         payload["toPersonId"] = personId
 
@@ -94,14 +95,15 @@ def join_room(personId, roomTitle):
 
 def show_help(context_msg):
     respond(context_msg, """
-HI, I'M `LetMeInBot(beta)`, I'm new here!  
+Hi, I'm `LetMeInBot(beta)`, I'm new here!  
 Webex Teams doesn't let you re-enter rooms you leave.  
 I do.  
-If you invite me to a room, I will let you into that room if you leave.  
+If you invite me to a room, I will let you (or anyone!) into that room if they ask!  
 I respond to the following commands:
 * list - I will tell you which rooms I can let you in to
-* join <name> - I will you into any rooms with that name
+* join \\<name\\> - I will you into any rooms with that name
 * help - I print this message again
+
 I trust everyone, so don't let me into any sensitive rooms!""")
 
 
@@ -119,7 +121,7 @@ def lambda_handler(event, context):
 
     body = message.json()  # ['id']
 
-    if body['personId'] == BOT_ID:
+    if body['personId'] == MYSELF:
         debug(simple="Received notification that we posted a message")
         return {
             'statusCode': 200,
