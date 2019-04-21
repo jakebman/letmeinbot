@@ -3,35 +3,47 @@ from botocore.vendored import requests
 from os import environ
 from pprint import pprint
 
+BOT_ID = "Y2lzY29zcGFyazovL3VzL0FQUExJQ0FUSU9OL2NkZWFjMzY2LWU2MzQtNDVmNS05NmRiLWJiMGJiNTMxZTE0Yg"
 HEADERS = dict()
 debug_settings = {'method': print}
 
 
 def debug_to_me(msg):
+    # TODO: consider a letmein bot debug room
     send(
         "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83NDk5YTMzOC02YzM4LTQzMDctYjVkMi1jYjVjYTg2OGM2ODY",
-        # TODO: consider a letmein bot debug room
         msg
     )
     print(msg)
 
 
-def debug(**msgs):
-    for key in msgs:
-        debug_msg = """
-```
+def debug(*msgs, **kmsg):
+    msgs = list(msgs)
+    for key in kmsg:
+        debug_msg = """```
 {0}:
-{1}""".format(key, json.dumps(msgs[key], indent=3))
+{1}""".format(key, json.dumps(kmsg[key], indent=3))
+        msgs.append(debug_msg)
 
-        debug_settings['method'](debug_msg)
+    for msg in msgs:
+        debug_settings['method'](msg)
 
 
-def send(personId, markdown):
-    payload = {
-        "toPersonId": personId,
-        "markdown": markdown,
-    }
-    requests.post('https://api.ciscospark.com/v1/messages', headers=HEADERS, json=payload)
+def send(personId, markdown, room=None):
+    payload = dict()
+    if (room):
+        payload["roomId"] = room
+        if (personId):
+            markdown = "<@personId{}>: {}".format(personId, markdown)
+    else:
+        payload["toPersonId"] = personId
+
+    payload["markdown"] = markdown
+    print("sending create request with " + str(payload.keys()))
+    resp = requests.post('https://api.ciscospark.com/v1/messages', headers=HEADERS, json=payload)
+    if not resp or not resp.ok:
+        print(resp)
+        pprint(resp.json())
 
 
 def roomList():
@@ -47,7 +59,12 @@ def list_rooms(personId):
     # TODO: format into prompt
     prompt = json.dumps(names)
 
-    send(personId, prompt)
+    bullet_list = "\n".join("* " + n for n in names)
+    markdown = "Here are the rooms that <@personId:{}> can let you in to:\n" \
+               "{}\n" \
+               "Use 'join <room name>' to enter a room.".format(BOT_ID, bullet_list)
+
+    send(personId, markdown)
 
 
 def create_membership(personId, roomId):
@@ -57,6 +74,7 @@ def create_membership(personId, roomId):
 
 
 def join_room(personId, roomTitle):
+    debug("joining room '{}'".format(roomTitle))
     rooms = roomList()
     ids = [room['id'] for room in rooms if roomTitle in room['title']]
     for id in ids:
@@ -64,10 +82,11 @@ def join_room(personId, roomTitle):
 
 
 def lambda_handler(event, context):
+    debug_settings['method'] = print
     if 'data' not in event:
-        pprint(event)
+        debug(event=event)
     if 'id' not in event['data']:
-        pprint(event['data'])
+        debug(**{"event['data']":event['data']})
     message_id = event['data']['id']
 
     HEADERS['Authorization'] = environ['Authorization']
@@ -76,8 +95,16 @@ def lambda_handler(event, context):
 
     body = message.json()  # ['id']
 
+    if body['personId'] == BOT_ID:
+        debug(simple="Received notification that we posted a message")
+        return {
+            'statusCode': 200,
+            'body': body
+        }
+
     text = body['text']
     if "debug" in text or 'debug' in event:  # string contains, or key exists
+        print("found debug flag")
         debug_settings['method'] = debug_to_me
 
     debug(event=event, message_itself=body)
@@ -85,8 +112,11 @@ def lambda_handler(event, context):
     if 'list' in text:
         list_rooms(body['personId'])
 
-    if 'join' in text:
-        join_room(body['personId'], text.lstrip("join "))
+    if 'join ' in text:
+        needle = 'join '
+        pos = text.find(needle)
+
+        join_room(body['personId'], text[pos + len(needle):])
 
     return {
         'statusCode': 200,
