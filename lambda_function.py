@@ -74,7 +74,7 @@ def list_rooms(personId):
     bullet_list = "\n".join("* " + n for n in names)
     markdown = "Here are the rooms that LetMeInBot can let you in to:\n" \
                "{}\n\n" \
-               "Use 'join \<room name\>' to join a room.".format(bullet_list)
+               "Use 'join *room name* to join a room.".format(bullet_list)
 
     send(personId, markdown)
 
@@ -101,7 +101,7 @@ I do.
 If you invite me to a room, I will let you (or anyone!) into that room if they ask!  
 I respond to the following commands:
 * list - I will tell you which rooms I can let you in to
-* join Room Name - I will you into any rooms with with 'Room Name' in their names
+* join *Room Name* - I will you into any rooms with with 'Room Name' in their names
 * help - I print this message again
 
 I don't have a good trust model yet, so I let absolutely anyone into your room!  
