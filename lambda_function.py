@@ -87,7 +87,7 @@ def lambda_handler(event, context):
     if 'data' not in event:
         debug(event=event)
     if 'id' not in event['data']:
-        debug(**{"event['data']":event['data']})
+        debug(**{"event['data']": event['data']})
     message_id = event['data']['id']
 
     HEADERS['Authorization'] = environ['Authorization']
