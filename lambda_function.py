@@ -64,12 +64,14 @@ def roomList():
     return js['items']
 
 
-def list_rooms(personId):
+def list_rooms(personId, roomName):
     rooms = roomList()
-    names = [room['title'] for room in rooms]
+    matches = lambda room: roomName in room['title']
+    names = [room['title'] for room in rooms if matches(room)]
 
     # TODO: format into prompt
     prompt = json.dumps(names)
+    
 
     bullet_list = "\n".join("* " + n for n in names)
     markdown = "Here are the rooms that LetMeInBot can let you in to:\n" \
@@ -100,7 +102,7 @@ Webex Teams doesn't let you re-enter rooms you leave.
 I do.  
 If you invite me to a room, I will let you (or anyone!) into that room if they ask!  
 I respond to the following commands:
-* list - I will tell you which rooms I can let you in to
+* list *Partial Room Name* - I will tell you which rooms I can let you in to (new: I also filter to only rooms with "*Partial Room Name*" in their name)
 * join *Room Name* - I will you into any rooms with with 'Room Name' in their names
 * help - I print this message again
 
@@ -143,7 +145,12 @@ def lambda_handler(event, context):
         pos = text.lower().find(needle)
         join_room(body['personId'], text[pos + len(needle):])
     elif 'list' in text.lower():
-        list_rooms(body['personId'])
+        needle = 'list '
+        pos = text.lower().find(needle)
+        if pos >= 0:
+            list_rooms(body['personId'], text[pos + len(needle):])
+        else:
+            list_rooms(body['personId'], '')
 
     return {
         'statusCode': 200,
