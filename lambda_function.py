@@ -1,5 +1,5 @@
 import json
-from botocore.vendored import requests
+import requests
 from os import environ
 from pprint import pprint
 
