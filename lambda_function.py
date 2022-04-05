@@ -59,7 +59,7 @@ def send(personId, markdown, room=None, personal=False):
 
 
 def roomList():
-    req = requests.get('https://api.ciscospark.com/v1/rooms?type=group', headers=HEADERS)
+    req = requests.get('https://api.ciscospark.com/v1/rooms?type=group&max=1000', headers=HEADERS)
     js = req.json()
     return js['items']
 
